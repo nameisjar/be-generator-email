@@ -1,0 +1,16 @@
+[Unit]
+Description=Cloudflare Tunnel for Email Alias Manager Backend
+After=network.target email-alias-backend.service
+Wants=email-alias-backend.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/cloudflared tunnel run
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/log/cloudflared-tunnel.log
+StandardError=append:/var/log/cloudflared-tunnel-error.log
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,26 @@
+[Unit]
+Description=Email Alias Manager Backend
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=mailapp
+Group=mailapp
+WorkingDirectory=/opt/email-alias-manager/backend
+EnvironmentFile=/opt/email-alias-manager/backend/.env
+ExecStart=/usr/bin/node src/server.js
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/log/email-alias-manager/backend.log
+StandardError=append:/var/log/email-alias-manager/backend-error.log
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/email-alias-manager
+
+[Install]
+WantedBy=multi-user.target

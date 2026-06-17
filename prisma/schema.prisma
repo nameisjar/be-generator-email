@@ -1,0 +1,84 @@
+// Prisma schema for Email Alias Manager
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String?
+  avatarUrl    String?  @map("avatar_url")
+  provider     String   @default("local") // "local" | "google"
+  providerId   String?  @map("provider_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  aliases      Alias[]
+  refreshTokens RefreshToken[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Alias {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  address   String   @unique // local part only, e.g. "netflix-xyz". Domain handled at app level.
+  label     String?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emails    Email[]
+
+  @@index([userId])
+  @@index([address])
+  @@index([isActive])
+  @@map("aliases")
+}
+
+model Email {
+  id            String   @id @default(cuid())
+  aliasId       String   @map("alias_id")
+  messageId     String?  @unique @map("message_id") // RFC 5322 Message-ID header
+  fromAddress   String   @map("from_address")
+  fromName      String?  @map("from_name")
+  toAddress     String   @map("to_address")
+  subject       String
+  bodyText      String?  @map("body_text") @db.Text
+  bodyHtml      String?  @map("body_html") @db.Text
+  snippet       String?  @db.Text
+  extractedCode String?  @map("extracted_code")
+  isRead        Boolean  @default(false) @map("is_read")
+  receivedAt    DateTime @map("received_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  alias         Alias    @relation(fields: [aliasId], references: [id], onDelete: Cascade)
+
+  @@index([aliasId, receivedAt])
+  @@index([isRead])
+  @@map("emails")
+}

@@ -2,7 +2,7 @@
 const dotenv = require('dotenv');
 dotenv.config();
 
-const required = ['DATABASE_URL', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'WEBHOOK_SECRET', 'MAIL_DOMAIN'];
+const required = ['DATABASE_URL', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'WEBHOOK_SECRET'];
 const missing = required.filter((k) => !process.env[k]);
 
 if (missing.length > 0) {
@@ -26,9 +26,22 @@ module.exports = {
         refreshExpires: process.env.JWT_REFRESH_EXPIRES || '14d',
     },
 
-    mail: {
-        domain: process.env.MAIL_DOMAIN || 'algonova.my.id',
-    },
+    // Allowed email domains for aliases. Comma-separated list, e.g.
+    // "algonova.my.id,yumi.my.id". The first entry is treated as the default
+    // and is used when a request omits the domain. Each domain MUST also be
+    // configured in Cloudflare Email Routing pointing to the Worker.
+    mail: (() => {
+        const raw = process.env.MAIL_DOMAINS || process.env.MAIL_DOMAIN || 'algonova.my.id';
+        const domains = raw
+            .split(',')
+            .map((d) => d.trim().toLowerCase())
+            .filter(Boolean);
+        // Back-compat: keep `mail.domain` pointing at the default.
+        return {
+            domains,
+            domain: domains[0] || 'algonova.my.id',
+        };
+    })(),
 
     webhook: {
         secret: process.env.WEBHOOK_SECRET,

@@ -30,7 +30,7 @@ const crypto = require('crypto');
 
 const BACKEND = (process.env.BACKEND_URL || 'http://localhost:4000').replace(/\/$/, '');
 const SECRET = process.env.WEBHOOK_SECRET;
-const DOMAIN = process.env.MAIL_DOMAIN || 'algonova.my.id';
+const DOMAIN = process.env.MAIL_DOMAIN || process.env.MAIL_DOMAINS?.split(',')[0] || 'algonova.my.id';
 const FRONTEND = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
 
 if (!SECRET) {

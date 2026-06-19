@@ -6,13 +6,22 @@ async function list(req, res) {
   const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize) || 20));
   const search = typeof req.query.q === 'string' ? req.query.q.trim() : '';
   const activeOnly = req.query.active === 'true';
+  const domain = typeof req.query.domain === 'string' ? req.query.domain.trim() : '';
   const data = await aliasService.listAliases(req.user.id, {
     page,
     pageSize,
     search,
     activeOnly,
+    domain,
   });
   res.json(data);
+}
+
+async function domains(_req, res) {
+  res.json({
+    domains: aliasService.allowedDomains(),
+    defaultDomain: require('../config/env').mail.domain,
+  });
 }
 
 async function create(req, res) {
@@ -35,4 +44,4 @@ async function getOne(req, res) {
   res.json({ alias });
 }
 
-module.exports = { list, create, update, remove, getOne };
+module.exports = { list, create, update, remove, getOne, domains };

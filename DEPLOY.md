@@ -1,7 +1,8 @@
 # Email Alias Manager — Backend
 
-Express + Prisma API for managing email aliases on `algonova.my.id` and storing
-emails forwarded by the Cloudflare Worker.
+Express + Prisma API for managing email aliases across configured domains
+(e.g. `algonova.my.id`, `yumi.my.id`) and storing emails forwarded by the
+Cloudflare Worker.
 
 ## Local development
 
@@ -37,7 +38,10 @@ needs a stable, always-on URL to forward emails to.
 4. Set the other env vars in the Railway dashboard:
    - `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` — long random hex
    - `WEBHOOK_SECRET` — must match the Worker's secret
-   - `MAIL_DOMAIN=algonova.my.id`
+   - `MAIL_DOMAINS=algonova.my.id,yumi.my.id` — comma-separated list of
+     domains users are allowed to create aliases under. The first entry
+     is the default. (Legacy: `MAIL_DOMAIN=algonova.my.id` is still read
+     if `MAIL_DOMAINS` is unset.)
    - `FRONTEND_URL=https://your-spa.example.com` (or your Vercel/Netlify URL)
    - `NODE_ENV=production`
 5. Run the Prisma migration against the Railway database:

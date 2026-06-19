@@ -12,7 +12,8 @@ function buildSnippet(text, max = 180) {
 
 /**
  * Called by the webhook. The toAddress is something like "netflix-xyz@algonova.my.id".
- * We strip the domain to find the local part, look it up, and persist the email.
+ * We parse out the local part and domain, look up the alias by that pair
+ * (multi-domain support), and persist the email.
  */
 async function ingestIncomingEmail({
   messageId,
@@ -28,8 +29,21 @@ async function ingestIncomingEmail({
     throw new AppError('Missing toAddress', 400, 'BAD_REQUEST');
   }
 
-  const localPart = String(toAddress).split('@')[0].toLowerCase();
-  const alias = await prisma.alias.findUnique({ where: { address: localPart } });
+  const atIdx = String(toAddress).lastIndexOf('@');
+  if (atIdx <= 0) {
+    return { dropped: true, reason: 'invalid toAddress' };
+  }
+  const localPart = String(toAddress).slice(0, atIdx).toLowerCase();
+  const domain = String(toAddress).slice(atIdx + 1).toLowerCase();
+
+  // Only accept emails for configured domains. Anything else is dropped silently.
+  if (!aliasService.allowedDomains().includes(domain)) {
+    return { dropped: true, reason: `domain not allowed: ${domain}` };
+  }
+
+  const alias = await prisma.alias.findUnique({
+    where: { address_domain: { address: localPart, domain } },
+  });
   if (!alias || !alias.isActive) {
     // Silently drop — domain may receive catch-all, but the alias may be inactive/unknown.
     return { dropped: true, reason: 'alias not found or inactive' };

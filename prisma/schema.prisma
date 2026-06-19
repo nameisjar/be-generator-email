@@ -45,7 +45,8 @@ model RefreshToken {
 model Alias {
   id        String   @id @default(cuid())
   userId    String   @map("user_id")
-  address   String   @unique // local part only, e.g. "netflix-xyz". Domain handled at app level.
+  address   String   // local part only, e.g. "netflix-xyz". Domain is stored separately.
+  domain    String   @default("algonova.my.id") // which mail domain this alias lives under
   label     String?
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
@@ -54,8 +55,10 @@ model Alias {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   emails    Email[]
 
+  @@unique([address, domain]) // local part is unique per domain, not globally
   @@index([userId])
   @@index([address])
+  @@index([domain])
   @@index([isActive])
   @@map("aliases")
 }

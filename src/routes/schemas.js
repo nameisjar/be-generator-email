@@ -20,6 +20,7 @@ const createAliasSchema = z.object({
     .regex(/^[a-z0-9](?:[a-z0-9._-]{1,28}[a-z0-9])?$/, 'Invalid alias format')
     .optional(),
   label: z.string().min(1).max(80).optional(),
+  domain: z.string().min(1).max(254).optional(),
 });
 
 const updateAliasSchema = z.object({
@@ -32,6 +33,7 @@ const listAliasesQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).optional(),
   q: z.string().min(1).max(200).optional(),
   active: z.union([z.literal('true'), z.literal('false')]).optional(),
+  domain: z.string().min(1).max(254).optional(),
 });
 
 const idParamSchema = z.object({
